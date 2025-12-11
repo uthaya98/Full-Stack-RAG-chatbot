@@ -1,0 +1,33 @@
+{
+    "FunctionName": "zuscoffee-chatbot",
+    "FunctionArn": "arn:aws:lambda:ap-southeast-2:589608611680:function:zuscoffee-chatbot",
+    "Role": "arn:aws:iam::589608611680:role/zuscoffee-lambda-role",
+    "CodeSize": 0,
+    "Description": "",
+    "Timeout": 60,
+    "MemorySize": 1024,
+    "LastModified": "2025-11-16T18:31:27.604+0000",
+    "CodeSha256": "64ecb0f3a27d026b1eba9b274b65ce5ed3a9a323a9530159b9cf2141c4621cf4",
+    "Version": "$LATEST",
+    "TracingConfig": {
+        "Mode": "PassThrough"
+    },
+    "RevisionId": "aa8bfb35-fe5f-4f28-8ae4-c61b422bc73d",
+    "State": "Active",
+    "LastUpdateStatus": "Successful",
+    "PackageType": "Image",
+    "Architectures": [
+        "x86_64"
+    ],
+    "EphemeralStorage": {
+        "Size": 512
+    },
+    "SnapStart": {
+        "ApplyOn": "None",
+        "OptimizationStatus": "Off"
+    },
+    "LoggingConfig": {
+        "LogFormat": "Text",
+        "LogGroup": "/aws/lambda/zuscoffee-chatbot"
+    }
+}

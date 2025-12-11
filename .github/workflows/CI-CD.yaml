@@ -1,0 +1,99 @@
+name: CI/CD - ECR + Minikube Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+  BACKEND_IMAGE: rag-backend-app
+  FRONTEND_IMAGE: rag-frontend-app
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # -------- AWS LOGIN ----------
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+        
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # -------- Build Backend Image ----------
+      - name: Build Backend Docker Image
+        run: |
+          docker build -t $ECR_REGISTRY/$BACKEND_IMAGE:${GITHUB_SHA} ./backend
+          docker tag $ECR_REGISTRY/$BACKEND_IMAGE:${GITHUB_SHA} $ECR_REGISTRY/$BACKEND_IMAGE:latest
+    
+      # -------- Build Frontend Image ----------
+      - name: Build Frontend Docker Image
+        run: |
+          docker build -t $ECR_REGISTRY/$FRONTEND_IMAGE:${GITHUB_SHA} ./frontend
+          docker tag $ECR_REGISTRY/$FRONTEND_IMAGE:${GITHUB_SHA} $ECR_REGISTRY/$FRONTEND_IMAGE:latest
+      
+      # -------- Push Backend Image ----------
+      - name: Push Backend Image
+        run: |
+          docker push $ECR_REGISTRY/$BACKEND_IMAGE:${GITHUB_SHA}
+          docker push $ECR_REGISTRY/$BACKEND_IMAGE:latest
+
+      # -------- Push Frontend Image ----------
+      - name: Push Frontend Image
+        run: |
+          docker push $ECR_REGISTRY/$FRONTEND_IMAGE:${GITHUB_SHA}
+          docker push $ECR_REGISTRY/$FRONTEND_IMAGE:latest
+  
+  deploy-to-minikube:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # -------- Install kubectl ----------
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: '1.27.3'
+
+      # -------- Restore Minikube kubeconfig ----------
+      - name: Load kubeconfig for Minikube
+        run: |
+          echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 --decode > ~/.kube/config
+
+      # -------- Update Backend Deployment ----------
+      - name: Update Backend Image
+        run: |
+          kubectl set image deployment/rag-backend \
+          rag-backend=$ECR_REGISTRY/$BACKEND_IMAGE:${GITHUB_SHA} \
+          --record
+
+      # -------- Update Frontend Deployment ----------
+      - name: Update Frontend Image
+        run: |
+          kubectl set image deployment/rag-frontend \
+          rag-frontend=$ECR_REGISTRY/$FRONTEND_IMAGE:${GITHUB_SHA} \
+          --record
+
+      # -------- Rollout Check ----------
+      - name: Wait for Deployment Rollout
+        run: |
+          kubectl rollout status deployment/rag-backend --timeout=120s
+          kubectl rollout status deployment/rag-frontend --timeout=120s
+
+      # -------- (Optional) Re-apply manifests ----------
+      - name: Apply Kubernetes Manifests
+        run: |
+          kubectl apply -f k8s/

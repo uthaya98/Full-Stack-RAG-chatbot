@@ -1,0 +1,25 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "LambdaECRImageRetrievalPolicy",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Action": [
+        "ecr:BatchGetImage",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:GetRepositoryPolicy",
+        "ecr:SetRepositoryPolicy",
+        "ecr:DeleteRepositoryPolicy"
+      ],
+      "Resource": "arn:aws:ecr:ap-southeast-2:589608611680:repository/zuscoffee-chatbot",
+      "Condition": {
+        "StringLike": {
+          "aws:sourceArn": "arn:aws:lambda:ap-southeast-2:589608611680:function:*"
+        }
+      }
+    }
+  ]
+}
