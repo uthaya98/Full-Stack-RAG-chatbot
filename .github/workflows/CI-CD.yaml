@@ -71,7 +71,9 @@ jobs:
       # -------- Restore Minikube kubeconfig ----------
       - name: Load kubeconfig for Minikube
         run: |
+          mkdir -p ~/.kube
           echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 --decode > ~/.kube/config
+
 
       # -------- Update Backend Deployment ----------
       - name: Update Backend Image
