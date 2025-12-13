@@ -153,6 +153,9 @@ async def startup_event():
     except Exception as e:
         print("⚠️ Unexpected error during startup ingestion:", e)
 
+@app.get("/health")
+def health():
+    return {"status": "ok"}
 
 # --- Chat Endpoint ---
 @app.post("/api/chat", response_model=ChatResponse)
