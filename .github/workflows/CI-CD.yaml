@@ -99,7 +99,7 @@ jobs:
       # Apply manifests
       - name: Apply Kubernetes manifests
         run: |
-          kubectl apply -f k8s/ -n $NAMESPACE
+          kubectl apply -f CICD/k8s/ -n $NAMESPACE
 
       # Rollout checks
       - name: Backend rollout
