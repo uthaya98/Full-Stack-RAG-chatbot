@@ -85,15 +85,13 @@ jobs:
       - name: Update Backend Image
         run: |
           kubectl set image deployment/rag-backend \
-          rag-backend=$ECR_REGISTRY/$BACKEND_IMAGE:${GITHUB_SHA} \
-          --record
+          rag-backend=$ECR_REGISTRY/$BACKEND_IMAGE:${GITHUB_SHA} 
 
       # -------- Update Frontend Deployment ----------
       - name: Update Frontend Image
         run: |
           kubectl set image deployment/rag-frontend \
-          rag-frontend=$ECR_REGISTRY/$FRONTEND_IMAGE:${GITHUB_SHA} \
-          --record
+          rag-frontend=$ECR_REGISTRY/$FRONTEND_IMAGE:${GITHUB_SHA}
 
       # -------- Rollout Check ----------
       - name: Wait for Deployment Rollout
