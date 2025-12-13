@@ -89,12 +89,12 @@ jobs:
       - name: Inject backend image
         run: |
           sed -i "s|REPLACE_ECR_REGISTRY/rag-backend-app:latest|$ECR_REGISTRY/$BACKEND_IMAGE:${GITHUB_SHA}|g" \
-          k8s/rag-backend-deployment.yaml
+          k8s/backend-deployment.yaml
 
       - name: Inject frontend image
         run: |
           sed -i "s|REPLACE_ECR_REGISTRY/rag-frontend-app:latest|$ECR_REGISTRY/$FRONTEND_IMAGE:${GITHUB_SHA}|g" \
-          k8s/rag-frontend-deployment.yaml
+          k8s/frontend-deployment.yaml
 
       # Apply manifests
       - name: Apply Kubernetes manifests
