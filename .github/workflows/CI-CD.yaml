@@ -9,14 +9,14 @@ env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
   ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
   BACKEND_IMAGE: rag-backend-app
-  FRONTEND_IMAGE: ${{ secrets.FRONTEND_IMAGE }}
+  FRONTEND_IMAGE: rag-frontend-app
   EKS_CLUSTER_NAME: ${{ secrets.EKS_CLUSTER_NAME }}
   NAMESPACE: default  # change if you use another namespace
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -61,48 +61,53 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
+      - name: Checkout source
         uses: actions/checkout@v4
 
       # -------- Install kubectl ----------
       - name: Install kubectl
         uses: azure/setup-kubectl@v3
         with:
-          version: 'latest'
+          version: latest
 
-      # -------- Configure AWS Credentials ----------
-      - name: Configure AWS Credentials
+      # AWS auth
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ env.AWS_REGION }}
 
-      # -------- Configure kubectl for EKS ----------
-      - name: Update kubeconfig for EKS
+      # EKS auth
+      - name: Configure kubeconfig
         run: |
-          aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $AWS_REGION
+          aws eks update-kubeconfig \
+            --name $EKS_CLUSTER_NAME \
+            --region $AWS_REGION
 
-      # -------- Replace Backend Image in Manifest ----------
-      - name: Replace Backend Image in Manifest
+      # Replace images in manifests
+      - name: Inject backend image
         run: |
-          sed -i "s|REPLACE_ECR_REGISTRY/rag-backend-app:latest|$ECR_REGISTRY/$BACKEND_IMAGE:${GITHUB_SHA}|g" k8s/rag-backend-deployment.yaml
+          sed -i "s|REPLACE_ECR_REGISTRY/rag-backend-app:latest|$ECR_REGISTRY/$BACKEND_IMAGE:${GITHUB_SHA}|g" \
+          k8s/rag-backend-deployment.yaml
 
-      # -------- Replace Frontend Image in Manifest ----------
-      - name: Replace Frontend Image in Manifest
+      - name: Inject frontend image
         run: |
-          sed -i "s|REPLACE_ECR_REGISTRY/rag-frontend-app:latest|$ECR_REGISTRY/$FRONTEND_IMAGE:${GITHUB_SHA}|g" k8s/rag-frontend-deployment.yaml
+          sed -i "s|REPLACE_ECR_REGISTRY/rag-frontend-app:latest|$ECR_REGISTRY/$FRONTEND_IMAGE:${GITHUB_SHA}|g" \
+          k8s/rag-frontend-deployment.yaml
 
-      # -------- Apply Kubernetes Manifests ----------
-      - name: Apply Kubernetes Manifests
+      # Apply manifests
+      - name: Apply Kubernetes manifests
         run: |
           kubectl apply -f k8s/ -n $NAMESPACE
 
-      # -------- Wait for Deployment Rollout ----------
-      - name: Wait for Backend Rollout
+      # Rollout checks
+      - name: Backend rollout
         run: |
-          kubectl rollout status deployment/rag-backend -n $NAMESPACE --timeout=120s
+          kubectl rollout status deployment/rag-backend \
+            -n $NAMESPACE --timeout=180s
 
-      - name: Wait for Frontend Rollout
+      - name: Frontend rollout
         run: |
-          kubectl rollout status deployment/rag-frontend -n $NAMESPACE --timeout=120s
+          kubectl rollout status deployment/rag-frontend \
+            -n $NAMESPACE --timeout=180s
