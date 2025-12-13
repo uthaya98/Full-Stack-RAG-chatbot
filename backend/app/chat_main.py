@@ -9,6 +9,7 @@ import openai
 import logging
 import numpy as np
 import asyncio
+import os
 
 # Local modules
 from app.memory import ConversationMemory
@@ -17,7 +18,7 @@ from app.api.OutletsAPI import router as outlets_router, ingest_outlets, query_o
 from app.api.Calculator import safe_eval
 
 # --- OpenAI setup ---
-openai.api_key = "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"  # replace with your actual key
+openai.api_key = os.getenv("OPENAI_API_KEY") # replace with your actual key
 
 # --- FastAPI setup ---
 app = FastAPI(title="ZusCoffee Chatbot Backend")
