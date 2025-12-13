@@ -11,7 +11,7 @@ import numpy as np
 import asyncio
 
 # Local modules
-from memory import ConversationMemory
+from app.memory import ConversationMemory
 from api.ProductsAPI import router as products_router, ingest_products, query_products
 from api.OutletsAPI import router as outlets_router, ingest_outlets, query_outlets
 from api.Calculator import safe_eval
